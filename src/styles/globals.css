@@ -1,0 +1,116 @@
+/**
+ * @file globals.css
+ * @description Global styles and CSS custom properties (design tokens).
+ *
+ *              We use HSL CSS variables so Tailwind's color system works with
+ *              shadcn/ui AND so toggling dark mode is a single class swap on <html>.
+ *
+ *              Light mode tokens are on :root
+ *              Dark mode tokens are on .dark
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Light Mode Design Tokens ───────────────────────────────────────── */
+:root {
+  --background:    0 0% 100%;
+  --foreground:    240 10% 3.9%;
+
+  --card:          0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+
+  --popover:       0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+
+  --primary:       243 75% 59%;      /* indigo-500 */
+  --primary-foreground: 0 0% 98%;
+
+  --secondary:     240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+
+  --muted:         240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+
+  --accent:        240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+
+  --destructive:   0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border:        240 5.9% 90%;
+  --input:         240 5.9% 90%;
+  --ring:          243 75% 59%;
+
+  --radius: 0.5rem;
+
+  /* Sidebar specific */
+  --sidebar-bg:    240 5% 96%;
+  --sidebar-border: 240 5.9% 90%;
+}
+
+/* ─── Dark Mode Design Tokens ────────────────────────────────────────── */
+.dark {
+  --background:    240 10% 3.9%;
+  --foreground:    0 0% 98%;
+
+  --card:          240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+
+  --popover:       240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary:       243 75% 65%;      /* slightly lighter indigo in dark */
+  --primary-foreground: 240 10% 3.9%;
+
+  --secondary:     240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted:         240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+
+  --accent:        240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive:   0 62.8% 50.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border:        240 3.7% 15.9%;
+  --input:         240 3.7% 15.9%;
+  --ring:          243 75% 65%;
+
+  --sidebar-bg:    240 6% 7%;
+  --sidebar-border: 240 3.7% 15.9%;
+}
+
+/* ─── Base resets ────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  /* Custom scrollbar for chat areas */
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-muted-foreground/30;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+/* ─── Utility: typing animation dots ─────────────────────────────────── */
+.typing-dot {
+  @apply inline-block h-2 w-2 rounded-full bg-muted-foreground animate-typing-pulse;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }

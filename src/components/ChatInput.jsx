@@ -1,70 +1,134 @@
 /**
- * @file ChatInput.jsx (MODIFIED)
- * @description Chat input component with file attachment support.
- *              Integrates FileAttachmentBtn and FilePreviewBar.
+ * @file ChatInput.jsx
+ * @description Chat input component with text input, voice input, and file attachment.
+ *              Integrates Web Speech API, file handling, and message submission.
+ * @props {Function} onSendMessage - Callback when user sends a message
+ * @props {Array} messages - Current messages (for context, optional)
  */
 
 import React, { useState } from 'react';
+import { Send } from 'lucide-react';
+import VoiceInput from './VoiceInput';
 import FileAttachmentBtn from './FileAttachmentBtn';
 import FilePreviewBar from './FilePreviewBar';
-import { useFileAttachment } from '../hooks/useFileAttachment';
+import useVoiceInput from '../hooks/useVoiceInput';
+import useFileAttachment from '../hooks/useFileAttachment';
 
-const ChatInput = ({ onSendMessage, isLoading = false }) => {
+const ChatInput = ({ onSendMessage }) => {
   const [message, setMessage] = useState('');
-  const { files, addFile, removeFile, clearFiles, error } = useFileAttachment();
+  const {
+    isListening,
+    transcript,
+    error: voiceError,
+    startListening,
+    stopListening,
+    resetTranscript,
+    isSupported: isVoiceSupported,
+  } = useVoiceInput();
 
-  const handleSendMessage = () => {
-    if (!message.trim() && files.length === 0) return;
+  const {
+    files,
+    error: fileError,
+    addFiles,
+    removeFile,
+    resetFiles,
+  } = useFileAttachment();
 
-    // Send message with attached files
-    onSendMessage({
+  // Auto-fill message when voice transcript is ready
+  React.useEffect(() => {
+    if (transcript && !isListening) {
+      setMessage((prev) => prev + transcript);
+      resetTranscript();
+    }
+  }, [transcript, isListening, resetTranscript]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+
+    // Don't send empty messages
+    if (!message.trim() && files.length === 0) {
+      return;
+    }
+
+    // Create message object with text and files
+    const messageData = {
       text: message.trim(),
-      files: files, // Array of { id, name, size, type, base64 }
-    });
+      files: files,
+      timestamp: new Date().toISOString(),
+    };
 
-    // Clear input and files
+    onSendMessage(messageData);
+
+    // Reset state
     setMessage('');
-    clearFiles();
+    resetFiles();
   };
 
   const handleKeyDown = (e) => {
+    // Send message on Enter (but not Shift+Enter for multiline)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage(e);
     }
   };
 
   return (
-    <div className="border-t border-gray-300 bg-white">
+    <div className="w-full border-t border-gray-200 bg-white p-4">
+      {/* Error messages */}
+      {voiceError && (
+        <div className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          🎙️ {voiceError}
+        </div>
+      )}
+      {fileError && (
+        <div className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          📎 {fileError}
+        </div>
+      )}
+
       {/* File preview bar */}
-      <FilePreviewBar files={files} onRemove={removeFile} error={error} />
+      {files.length > 0 && (
+        <FilePreviewBar files={files} onRemoveFile={removeFile} />
+      )}
 
       {/* Input area */}
-      <div className="p-4 flex gap-3">
+      <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+        {/* Voice input button */}
+        <VoiceInput
+          transcript={transcript}
+          isListening={isListening}
+          isSupported={isVoiceSupported}
+          onStartListening={startListening}
+          onStopListening={stopListening}
+        />
+
         {/* File attachment button */}
-        <FileAttachmentBtn onFileSelect={addFile} />
+        <FileAttachmentBtn onFilesSelected={addFiles} />
 
         {/* Text input */}
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message... (Shift+Enter for new line)"
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-24"
-          rows="2"
-          disabled={isLoading}
+          placeholder="Type a message... or use voice input"
+          className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          rows="3"
         />
 
         {/* Send button */}
         <button
-          onClick={handleSendMessage}
-          disabled={isLoading || (!message.trim() && files.length === 0)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-          type="button"
-          title="Send message"
+          type="submit"
+          disabled={!message.trim() && files.length === 0}
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          title="Send message (Enter)"
         >
-          {isLoading ? '...' : '➤'}
+          <Send size={20} />
         </button>
+      </form>
+
+      {/* Helper text */}
+      <div className="mt-2 text-xs text-gray-500">
+        💡 Press Enter to send, Shift+Enter for new line. Use voice or attach files.
       </div>
     </div>
   );
